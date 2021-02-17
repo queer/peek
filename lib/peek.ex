@@ -3,7 +3,12 @@ defmodule Peek do
   Documentation for `Peek`.
   """
 
-  @builtins [:binary, :integer, :non_neg_integer, :atom,]
+  @builtins [
+    :binary,
+    :integer,
+    :non_neg_integer,
+    :atom,
+  ]
 
   @spec peek(Module.t(), atom(), Keyword.t()) :: map()
   def peek(module, type \\ :t, opts \\ []) when is_atom(module) and is_atom(type) do
@@ -70,7 +75,6 @@ defmodule Peek do
     end)
     |> Map.new
   end
-
 
   defp filter_structs(value) do
     value
