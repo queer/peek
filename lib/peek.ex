@@ -1,6 +1,6 @@
 defmodule Peek do
   @moduledoc """
-  Documentation for `Peek`.
+  Peek at typespecs in a module and get them in a more-usable format.
   """
 
   @builtins [
@@ -10,6 +10,25 @@ defmodule Peek do
     :atom,
   ]
 
+  @doc """
+  Peek at a type in a module.
+
+  ## Usage
+
+      # Defaults to `:t`
+      Peek.peek MyApp.Module
+
+      # Check a specific type
+      Peek.peek MyApp.Module, :my_type
+
+      # Filter out the `:__struct__` key for cleaner output
+      Peek.peek MyApp.Module, :t, filter_structs: true
+
+  ## Options
+
+  - `filter_structs`: Whether or not to filter out the `:__struct__` key.
+                      Defaults to `false`.
+  """
   @spec peek(Module.t(), atom(), Keyword.t()) :: map()
   def peek(module, type \\ :t, opts \\ []) when is_atom(module) and is_atom(type) do
     # TODO: Allow a list of types or smth idk
