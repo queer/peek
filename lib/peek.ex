@@ -27,9 +27,9 @@ defmodule Peek do
   ## Options
 
   - `filter_structs`: Whether or not to filter out the `:__struct__` key.
-                      Defaults to `false`.
+    Defaults to `false`.
   """
-  @spec peek(Module.t(), atom(), Keyword.t()) :: map()
+  @spec peek(atom(), atom(), Keyword.t()) :: map()
   def peek(module, type \\ :t, opts \\ []) when is_atom(module) and is_atom(type) do
     # TODO: Allow a list of types or smth idk
     filter_structs? = Keyword.get opts, :filter_structs, false
