@@ -61,5 +61,11 @@ defmodule PeekTest do
         "two" => %{"atom" => ["ok", "nil"]}
       } = Peek.peek Data.A, json: true
     end
+
+    test "converts remote types to json properly" do
+      %{
+        "d" => [%{"whatever" => ["integer", "nil"]}, "nil"]
+      } = Peek.peek Data.E, json: true
+    end
   end
 end

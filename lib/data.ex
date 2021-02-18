@@ -21,5 +21,9 @@ defmodule PeekTest.Data do
     typedstruct module: D do
       field :whatever, [integer()]
     end
+
+    typedstruct module: E do
+      field :d, [PeekTest.Data.D.t()]
+    end
   end
 end

@@ -86,20 +86,28 @@ defmodule Peek.Transform do
     end
   end
 
-defp json_map_key({:atom, value}), do: Atom.to_string value
-defp json_map_key(value) when is_atom(value), do: Atom.to_string value
+  defp json_map_key({:atom, value}), do: Atom.to_string value
+  defp json_map_key(value) when is_atom(value), do: Atom.to_string value
   defp json_map_key(value), do: value
 
+  defp kw_to_multimap([list: [list_value], atom: nil]) do
+    json {json(list_value), json(nil)}
+  end
   defp kw_to_multimap(kw) when is_list(kw) do
-    Enum.reduce kw, %{}, fn {k, v}, acc ->
-      k = json_map_key k
-      v = json v
+    Enum.reduce kw, %{}, fn
+      {:map, _} = map, acc ->
+        mapped = json map
+        Map.merge acc, mapped
 
-      if Map.has_key?(acc, k) do
-        %{acc | k => acc[k] ++ [v]}
-      else
-        Map.put acc, k, [v]
-      end
+      {k, v}, acc ->
+        k = json_map_key k
+        v = json v
+
+        if Map.has_key?(acc, k) do
+          %{acc | k => acc[k] ++ [v]}
+        else
+          Map.put acc, k, [v]
+        end
     end
   end
 end
