@@ -16,19 +16,17 @@ defmodule PeekTest do
            {{:atom, :three}, {:union, [union: [atom: :ok, atom: :error], atom: nil]}},
            {{:atom, :two}, {:union, [atom: :ok, atom: nil]}}
          ]}
-      } = Peek.peek Data.A
+      } = Peek.peek Data.A, all_types: true
     end
 
     test "figures out remote user module types" do
-      %{
-        t: {:map,
-         [
-           {{:atom, :__struct__}, {:atom, PeekTest.Data.B}},
-           {{:atom, :c},
-            {:union,
-             [map: [{{:atom, :__struct__}, {:atom, PeekTest.Data.C}}], atom: nil]}}
-         ]}
-      } = Peek.peek Data.B
+      {:map,
+        [
+          {{:atom, :__struct__}, {:atom, PeekTest.Data.B}},
+          {{:atom, :c},
+          {:union,
+            [map: [{{:atom, :__struct__}, {:atom, PeekTest.Data.C}}], atom: nil]}}
+        ]} = Peek.peek Data.B
     end
 
     test "strips structs properly" do
@@ -39,25 +37,21 @@ defmodule PeekTest do
            {{:atom, :three}, {:union, [union: [atom: :ok, atom: :error], atom: nil]}},
            {{:atom, :two}, {:union, [atom: :ok, atom: nil]}}
          ]}
-      } = Peek.peek Data.A, :t, filter_structs: true
+      } = Peek.peek Data.A, filter_structs: true, all_types: true
 
-      %{
-        t: {:map,
-         [
-           {{:atom, :c},
-            {:union, [map: [], atom: nil]}}
-         ]}
-      } = Peek.peek Data.B, :t, filter_structs: true
+      {:map,
+        [
+          {{:atom, :c},
+          {:union, [map: [], atom: nil]}}
+        ]} = Peek.peek Data.B, filter_structs: true
     end
 
     test "figures out lists" do
-      %{
-        t: {:map,
-         [
-           {{:atom, :__struct__}, {:atom, PeekTest.Data.D}},
-           {{:atom, :whatever}, {:union, [list: [:integer], atom: nil]}}
-         ]}
-      } = Peek.peek Data.D
+      {:map,
+        [
+          {{:atom, :__struct__}, {:atom, PeekTest.Data.D}},
+          {{:atom, :whatever}, {:union, [list: [:integer], atom: nil]}}
+        ]} = Peek.peek Data.D
     end
   end
 end

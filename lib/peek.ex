@@ -19,20 +19,24 @@ defmodule Peek do
       Peek.peek MyApp.Module
 
       # Check a specific type
-      Peek.peek MyApp.Module, :my_type
+      Peek.peek MyApp.Module, type: :my_type
 
       # Filter out the `:__struct__` key for cleaner output
-      Peek.peek MyApp.Module, :t, filter_structs: true
+      Peek.peek MyApp.Module, filter_structs: true
 
   ## Options
 
+  - `type`: The type to get info for. Defaults to `:t`.
   - `filter_structs`: Whether or not to filter out the `:__struct__` key.
     Defaults to `false`.
+  - `all_types`: Whether or not to return a map of all types. Defaults to
+    `false`.
   """
-  @spec peek(atom(), atom(), Keyword.t()) :: map()
-  def peek(module, type \\ :t, opts \\ []) when is_atom(module) and is_atom(type) do
-    # TODO: Allow a list of types or smth idk
+  @spec peek(atom(), Keyword.t()) :: map()
+  def peek(module, opts \\ []) when is_atom(module) do
+    type = Keyword.get opts, :type, :t
     filter_structs? = Keyword.get opts, :filter_structs, false
+    all_types? = Keyword.get opts, :all_types, false
 
     {:ok, types} = Code.Typespec.fetch_types module
 
@@ -48,18 +52,25 @@ defmodule Peek do
     end)
     |> Enum.map(&process_type(module, &1))
     |> Map.new
-    |> finalise(filter_structs?)
+    |> finalise(type, all_types?, filter_structs?)
   end
 
-  defp finalise(data, filter_structs?) do
-    if filter_structs? do
-      data
-      |> Enum.map(fn {k, v} ->
-        {k, filter_structs(v)}
-      end)
-      |> Map.new
-    else
-      data
+  defp finalise(data, type, all_types?, filter_structs?) do
+    data
+    |> case do
+      data when filter_structs? ->
+        data
+        |> Enum.map(fn {k, v} ->
+          {k, filter_structs(v)}
+        end)
+        |> Map.new
+
+      data -> data
+    end
+    |> case do
+      data when all_types? -> data
+      data when is_map(data) -> data[type]
+      data -> data
     end
   end
 
@@ -126,7 +137,12 @@ defmodule Peek do
 
   defp process_type_ast(module, {:user_type, _line, user_type, _user_type_args}) do
     # TODO: Process type args too
-    module |> peek(user_type) |> Map.get(user_type)
+    module
+    |> peek(type: user_type)
+    |> case do
+      data when is_map(data) -> Map.get data, user_type
+      data -> data
+    end
   end
 
   defp process_type_ast(_module, {:remote_type, _line, [{:atom, _, String}, {:atom, _, :t}, _type_args]}) do
@@ -136,12 +152,22 @@ defmodule Peek do
 
   defp process_type_ast(_module, {:remote_type, _line, [{:atom, _, remote_module}, {:atom, _, type_name}, _type_args]}) do
     # TODO: Process type args too
-    remote_module |> peek(type_name) |> Map.get(type_name)
+    remote_module
+    |> peek(type: type_name)
+    |> case do
+      data when is_map(data) -> Map.get data, type_name
+      data -> data
+    end
   end
 
   defp process_type_ast(_module, {:remote_type, [{:atom, _, remote_module}, {:atom, _, type_name}, _type_args], _default}) do
     # TODO: Process type args too
-    remote_module |> peek(type_name) |> Map.get(type_name)
+    remote_module
+    |> peek(type: type_name)
+    |> case do
+      data when is_map(data) -> Map.get data, type_name
+      data -> data
+    end
   end
 
   defp process_type_ast(_module, {:type, _line, type_name, []}) when type_name in @builtins do
