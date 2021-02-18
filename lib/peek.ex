@@ -115,6 +115,16 @@ defmodule Peek do
     }
   end
 
+  defp process_type_ast(module, {:type, _line, :map_field_exact, [
+    {:atom, _, key_type},
+    {:type, _, value_type, value_args},
+  ]}) do
+    {
+      process_type_ast(module, {:atom, 0, key_type}),
+      process_type_ast(module, {:type, 0, value_type, value_args}),
+    }
+  end
+
   defp process_type_ast(_module, {:type, _line, :map_field_exact, [{key_type, _, key}, {value_type, _, value}]}) do
     {{key_type, key}, {value_type, value}}
   end

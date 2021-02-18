@@ -33,5 +33,9 @@ defmodule PeekTest.Data do
     typedstruct module: G do
       field :f, PeekTest.Data.F.t()
     end
+
+    typedstruct module: H do
+      field :int, integer(), default: 0
+    end
   end
 end

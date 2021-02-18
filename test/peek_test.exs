@@ -76,5 +76,14 @@ defmodule PeekTest do
         }
       } = Peek.peek Data.G, json: true
     end
+
+    test "handles integer() (idk why this happened but yeah)" do
+      {
+        :map, [
+          {{:atom, :__struct__}, {:atom, PeekTest.Data.H}},
+          {{:atom, :int}, :integer},
+        ],
+      } = Peek.peek Data.H
+    end
   end
 end
