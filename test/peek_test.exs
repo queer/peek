@@ -53,5 +53,13 @@ defmodule PeekTest do
           {{:atom, :whatever}, {:union, [list: [:integer], atom: nil]}}
         ]} = Peek.peek Data.D
     end
+
+    test "converts to json properly" do
+      %{
+        "one" => ["string", "nil"],
+        "three" => %{"atom" => ["nil"], "union" => [%{"atom" => ["ok", "error"]}]},
+        "two" => %{"atom" => ["ok", "nil"]}
+      } = Peek.peek Data.A, json: true
+    end
   end
 end

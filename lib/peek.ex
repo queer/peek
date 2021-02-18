@@ -3,6 +3,8 @@ defmodule Peek do
   Peek at typespecs in a module and get them in a more-usable format.
   """
 
+  alias Peek.Transform
+
   @builtins [
     :binary,
     :integer,
@@ -31,12 +33,14 @@ defmodule Peek do
     Defaults to `false`.
   - `all_types`: Whether or not to return a map of all types. Defaults to
     `false`.
+  - `json`: Whether or not to return a JSON-safe value. Defaults to `false`.
   """
   @spec peek(atom(), Keyword.t()) :: map()
   def peek(module, opts \\ []) when is_atom(module) do
     type = Keyword.get opts, :type, :t
     filter_structs? = Keyword.get opts, :filter_structs, false
     all_types? = Keyword.get opts, :all_types, false
+    json? = Keyword.get opts, :json, false
 
     {:ok, types} = Code.Typespec.fetch_types module
 
@@ -52,16 +56,19 @@ defmodule Peek do
     end)
     |> Enum.map(&process_type(module, &1))
     |> Map.new
-    |> finalise(type, all_types?, filter_structs?)
+    |> finalise(type, all_types?, filter_structs?, json?)
   end
 
-  defp finalise(data, type, all_types?, filter_structs?) do
+  defp finalise(data, type, all_types?, filter_structs?, json?) do
     data
     |> case do
-      data when filter_structs? ->
+      data when filter_structs? or json? ->
         data
         |> Enum.map(fn {k, v} ->
-          {k, filter_structs(v)}
+          {k, Transform.filter(v, fn
+            {{:atom, :__struct__}, _} -> false
+              _ -> true
+          end)}
         end)
         |> Map.new
 
@@ -72,42 +79,10 @@ defmodule Peek do
       data when is_map(data) -> data[type]
       data -> data
     end
-  end
-
-  defp filter_structs({type, value}) when type in [:map, :list, :union] do
-    {type, filter_structs(value)}
-  end
-
-  defp filter_structs(tuple) when is_tuple(tuple) do
-    tuple
-    |> Tuple.to_list
-    |> filter_structs
-    |> List.to_tuple
-  end
-
-  defp filter_structs(value) when is_list(value) do
-    value
-    |> Enum.reject(fn
-      {{:atom, :__struct__}, _} -> true
-      _ -> false
-    end)
-    |> Enum.map(&filter_structs/1)
-  end
-
-  defp filter_structs(map) when is_map(map) do
-    map
-    |> Enum.reject(fn
-      {_, {{:atom, :__struct__}, _}} -> true
-      _ -> false
-    end)
-    |> Enum.map(fn {k, v} ->
-      {k, filter_structs(v)}
-    end)
-    |> Map.new
-  end
-
-  defp filter_structs(value) do
-    value
+    |> case do
+      data when json? -> Transform.json data
+      data -> data
+    end
   end
 
   defp process_type(module, {type_name, type_ast, _unknown}) do
