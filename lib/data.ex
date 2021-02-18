@@ -25,5 +25,13 @@ defmodule PeekTest.Data do
     typedstruct module: E do
       field :d, [PeekTest.Data.D.t()]
     end
+
+    typedstruct module: F do
+      field :env, %{required(String.t()) => String.t()}
+    end
+
+    typedstruct module: G do
+      field :f, PeekTest.Data.F.t()
+    end
   end
 end

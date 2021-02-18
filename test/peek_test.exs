@@ -67,5 +67,14 @@ defmodule PeekTest do
         "d" => [%{"whatever" => ["integer", "nil"]}, "nil"]
       } = Peek.peek Data.E, json: true
     end
+
+    test "json handles remote types in map keys properly" do
+      %{
+        "f" => %{
+          "atom" => ["nil"],
+          "env" => %{"atom" => ["nil"], "string" => "string"}
+        }
+      } = Peek.peek Data.G, json: true
+    end
   end
 end

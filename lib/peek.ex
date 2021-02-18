@@ -101,6 +101,20 @@ defmodule Peek do
     {:list, Enum.map(types, &process_type_ast(module, &1))}
   end
 
+  # defp process_type_ast(module, {left, right}) do
+  #   {process_type_ast(module, left), process_type_ast(module, right)}
+  # end
+
+  defp process_type_ast(module, {:type, _line, :map_field_exact, [
+    {:remote_type, _, [key_mod, key_type, key_args]},
+    {:remote_type, _, [value_mod, value_type, value_args]},
+  ]}) do
+    {
+      process_type_ast(module, {:remote_type, 0, [key_mod, key_type, key_args]}),
+      process_type_ast(module, {:remote_type, 0, [value_mod, value_type, value_args]}),
+    }
+  end
+
   defp process_type_ast(_module, {:type, _line, :map_field_exact, [{key_type, _, key}, {value_type, _, value}]}) do
     {{key_type, key}, {value_type, value}}
   end
